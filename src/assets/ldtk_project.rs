@@ -5,9 +5,10 @@ use crate::{
         LdtkJsonWithMetadata, LdtkProjectData, LevelIndices, LevelMetadata, LevelMetadataAccessor,
     },
     ldtk::{raw_level_accessor::RawLevelAccessor, LdtkJson, Level},
+    prelude::LdtkEntity,
 };
 use bevy::{
-    asset::{AssetLoader, AssetPath, LoadContext, LoadedAsset},
+    asset::{io::Reader, AssetLoader, AssetPath, LoadContext, LoadedAsset, VisitAssetDependencies},
     prelude::*,
     reflect::{Reflect, TypeUuid},
     utils::BoxedFuture,
@@ -76,7 +77,7 @@ fn ldtk_path_to_asset_path<'b>(ldtk_path: &Path, rel_path: &str) -> AssetPath<'b
 /// [`LdtkExternalLevel`]: crate::assets::LdtkExternalLevel
 /// [`loaded_level` accessors]: LdtkJsonWithMetadata#impl-LdtkJsonWithMetadata<InternalLevels>
 /// [`external_level` accessors]: LdtkJsonWithMetadata#impl-LdtkJsonWithMetadata<ExternalLevels>
-#[derive(Clone, Debug, PartialEq, From, TypeUuid, Getters, Reflect)]
+#[derive(Clone, Debug, PartialEq, From, TypeUuid, Getters, Reflect, Asset)]
 #[uuid = "43571891-8570-4416-903f-582efe3426ac"]
 pub struct LdtkProject {
     /// LDtk json data and level metadata.
@@ -238,11 +239,16 @@ fn load_external_level_metadata<'a>(
 }
 
 impl AssetLoader for LdtkProjectLoader {
+    type Settings = ();
+    type Asset = LdtkProject;
+    type Error = LdtkProjectLoaderError;
+
     fn load<'a>(
         &'a self,
-        bytes: &'a [u8],
+        bytes: &'a mut Reader,
+        settings: &'a Self::Settings,
         load_context: &'a mut LoadContext,
-    ) -> BoxedFuture<'a, anyhow::Result<()>> {
+    ) -> BoxedFuture<'a, Result<Self::Asset, LdtkProjectLoaderError>> {
         Box::pin(async move {
             let data: LdtkJson = serde_json::from_slice(bytes)?;
 

@@ -356,5 +356,5 @@ pub struct LdtkWorldBundle {
     pub transform: Transform,
     pub global_transform: GlobalTransform,
     pub visibility: Visibility,
-    pub computed_visibility: ComputedVisibility,
+    pub computed_visibility: InheritedVisibility,
 }
